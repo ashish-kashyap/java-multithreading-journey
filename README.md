@@ -19,15 +19,18 @@ java-multithreading-journey/
 │   ├── Demo4.java   # start() vs run() & why a thread cannot be started twice
 │   ├── Demo5.java   # Concurrent execution & non-determinism (Even/Odd)
 │   └── Demo6.java   # Thread Lifecycle states (NEW, RUNNABLE, TERMINATED)
-└── 02-thread-methods/
-    ├── Demo.java    # Thread.sleep() and TIMED_WAITING state
-    ├── Demo2.java   # Thread.join() and timed join(ms)
-    ├── Demo3.java   # Thread.yield() scheduler hint
-    ├── Demo4.java   # Thread.interrupt(), interrupted(), and isInterrupted()
-    ├── Demo5.java   # Checking thread liveness with isAlive()
-    ├── Demo6.java   # Customizing thread names with setName() & currentThread()
-    ├── Demo7.java   # Thread priorities (MIN_PRIORITY, NORM_PRIORITY, MAX_PRIORITY)
-    └── Demo8.java   # Daemon threads with setDaemon(true)
+├── 02-thread-methods/
+│   ├── Demo.java    # Thread.sleep() and TIMED_WAITING state
+│   ├── Demo2.java   # Thread.join() and timed join(ms)
+│   ├── Demo3.java   # Thread.yield() scheduler hint
+│   ├── Demo4.java   # Thread.interrupt(), interrupted(), and isInterrupted()
+│   ├── Demo5.java   # Checking thread liveness with isAlive()
+│   ├── Demo6.java   # Customizing thread names with setName() & currentThread()
+│   ├── Demo7.java   # Thread priorities (MIN_PRIORITY, NORM_PRIORITY, MAX_PRIORITY)
+│   └── Demo8.java   # Daemon threads with setDaemon(true)
+└── 03-problems-in-multithreading/
+    ├── Demo.java    # Race condition & critical section (non-atomic count++)
+    └── Demo2.java   # Visibility problem & volatile flag across threads
 ```
 
 ---
@@ -76,13 +79,38 @@ Directory: [`02-thread-methods/`](./02-thread-methods)
 
 ---
 
+### 03. Problems in Multithreading
+Directory: [`03-problems-in-multithreading/`](./03-problems-in-multithreading)
+
+| File | Concept | Key Takeaways |
+| :--- | :--- | :--- |
+| [`Demo.java`](./03-problems-in-multithreading/Demo.java) | **Race Condition & Critical Section** | Two threads increment a shared `Counter` (`count++`) 10,000 times each. Because `count++` is a non-atomic read-modify-write sequence, thread interleaving causes lost updates (`count < 20000`). |
+| [`Demo2.java`](./03-problems-in-multithreading/Demo2.java) | **Visibility & `volatile`** | Demonstrates how one thread updating `flag = true` may not be visible to another thread spinning in `while (!flag)` without a happens-before relationship—solved by declaring `flag` as `volatile`. |
+
+#### Core Concurrency Problems & Guarantees
+Concurrency bugs happen when **shared + mutable state** is accessed by multiple threads without coordination:
+- **Atomicity** *(Can another thread interfere halfway?)*: Operations like `count++`, `x += 5`, and check-then-act (`if (balance >= amount) balance -= amount;`) are multi-step and can be interleaved. Fix with `synchronized`, `AtomicInteger`, or `ReentrantLock`.
+- **Visibility** *(Can another thread see the latest write?)*: Without a **happens-before** relationship, CPU registers/caches and compiler optimizations can hide updates from other threads. Fix with `volatile` (for simple state flags) or `synchronized`.
+- **Ordering** *(In what order do writes become observable?)*: Compilers/CPUs can reorder instructions as long as single-threaded semantics hold. `volatile` and `synchronized` establish safe publication ordering.
+
+| Problem | Main Meaning | Typical Example | Fix / Mechanism |
+| :--- | :--- | :--- | :--- |
+| **Race Condition** | Result depends on thread timing/order | Two threads incrementing `count++` | `synchronized`, `AtomicInteger`, `Lock` |
+| **Atomicity Problem** | Multi-step operation is interleaved | `count++` or check-then-act | `synchronized`, `Atomic*`, `ReentrantLock` |
+| **Visibility Problem** | Thread does not observe another's write | Non-volatile stop `flag` | `volatile`, `synchronized` |
+| **Ordering Problem** | Writes observed out of expected order | `ready = true` seen before `data = 10` | `volatile` (safe publication), `synchronized` |
+| **Thread Interference** | Overlapping ops disrupt each other | Lost update on shared counter | Mutual exclusion (`synchronized`, `Lock`) |
+| **Data Inconsistency** | Program state violates expected rules | Stale/partial read, lost update | Immutability, thread confinement, proper locking |
+
+---
+
 ## 🚀 How to Compile and Run
 
 Make sure you have **Java (JDK 8 or higher)** installed.
 
-1. Navigate to a topic directory (for example, `01-thread-creation-and-lifecycle` or `02-thread-methods`):
+1. Navigate to a topic directory (for example, `01-thread-creation-and-lifecycle`, `02-thread-methods`, or `03-problems-in-multithreading`):
    ```bash
-   cd 02-thread-methods
+   cd 03-problems-in-multithreading
    ```
 
 2. Compile all `.java` files:
@@ -94,7 +122,6 @@ Make sure you have **Java (JDK 8 or higher)** installed.
    ```bash
    java Demo
    java Demo2
-   # ... up to Demo8
    ```
 
 > **Note:** Compiled `.class` files are automatically ignored by `.gitignore` to keep the repository clean.
@@ -105,7 +132,7 @@ Make sure you have **Java (JDK 8 or higher)** installed.
 
 - [x] **01. Thread Creation and Lifecycle** (`Thread`, `Runnable`, Lambdas, `start()` vs `run()`, `Thread.State`)
 - [x] **02. Thread Methods & Control** (`sleep`, `join`, `yield`, `interrupt`, `isAlive`, `setName`, Priority, Daemon threads)
-- [ ] **03. Synchronization & Race Conditions** (`synchronized`, intrinsic locks, `volatile`)
-- [ ] **04. Inter-Thread Communication** (`wait`, `notify`, `notifyAll`, Producer-Consumer)
-- [ ] **05. Locks & Concurrency Utilities** (`ReentrantLock`, `Semaphore`, `CountDownLatch`)
-- [ ] **06. Executor Framework & `CompletableFuture`** (Thread pools, `Callable`, `Future`)
+- [x] **03. Problems in Multithreading** (Race conditions, Critical section, Atomicity, Visibility, Ordering, `volatile`)
+- [ ] **04. Synchronization & Locks** (`synchronized`, intrinsic locks, `ReentrantLock`, `AtomicInteger`)
+- [ ] **05. Inter-Thread Communication** (`wait`, `notify`, `notifyAll`, Producer-Consumer)
+- [ ] **06. Concurrency Utilities & Executors** (`Semaphore`, `CountDownLatch`, Thread pools, `CompletableFuture`)
