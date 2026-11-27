@@ -28,9 +28,16 @@ java-multithreading-journey/
 │   ├── Demo6.java   # Customizing thread names with setName() & currentThread()
 │   ├── Demo7.java   # Thread priorities (MIN_PRIORITY, NORM_PRIORITY, MAX_PRIORITY)
 │   └── Demo8.java   # Daemon threads with setDaemon(true)
-└── 03-problems-in-multithreading/
-    ├── Demo.java    # Race condition & critical section (non-atomic count++)
-    └── Demo2.java   # Visibility problem & volatile flag across threads
+├── 03-problems-in-multithreading/
+│   ├── Demo.java    # Race condition & critical section (non-atomic count++)
+│   └── Demo2.java   # Visibility problem & volatile flag across threads
+└── 04-monitor-locks/
+    ├── Demo.java    # Fixing race condition with synchronized(this) block
+    ├── Demo2.java   # Synchronized instance method acquiring object monitor
+    ├── Demo3.java   # Multiple synchronized methods sharing the same object lock
+    ├── Demo4.java   # Custom lock objects & the new Object() pitfall
+    ├── Demo5.java   # Static synchronization using ClassName.class monitor
+    └── Demo6.java   # Object monitor (this) vs Class monitor (ClassName.class)
 ```
 
 ---
@@ -104,13 +111,33 @@ Concurrency bugs happen when **shared + mutable state** is accessed by multiple 
 
 ---
 
+### 04. Synchronization & Monitor Locks
+Directory: [`04-monitor-locks/`](./04-monitor-locks)
+
+| File | Concept | Key Takeaways |
+| :--- | :--- | :--- |
+| [`Demo.java`](./04-monitor-locks/Demo.java) | **`synchronized(this)` Block** | Protects only the critical section (`count++`) with the current object's monitor, eliminating lost updates so two threads produce `20000`. |
+| [`Demo2.java`](./04-monitor-locks/Demo2.java) | **Synchronized Instance Method** | `synchronized void show()` acquires the monitor of `this`; two threads calling `show()` on the same `Test` instance execute mutually exclusively. |
+| [`Demo3.java`](./04-monitor-locks/Demo3.java) | **Lock Belongs to Object, Not Method** | Two different `synchronized` methods (`m1()` and `m2()`) on the same `Test1` object share the same `this` monitor, so one blocks the other. |
+| [`Demo4.java`](./04-monitor-locks/Demo4.java) | **Custom Locks & `new Object()` Pitfall** | Demonstrates dedicated lock objects (`lock1`, `lock2`) for independent operations (`deposit`/`withdraw`), and highlights why `synchronized(new Object())` fails (each thread gets a different monitor). |
+| [`Demo5.java`](./04-monitor-locks/Demo5.java) | **Static Synchronization** | `synchronized static void increment()` acquires the class-level monitor (`Counter1.class`), protecting static state across all instances. |
+| [`Demo6.java`](./04-monitor-locks/Demo6.java) | **Object Monitor vs Class Monitor** | A static synchronized method (`Class` monitor) and an instance synchronized method (`this` monitor) use different locks and can execute concurrently. |
+
+#### Monitor Lock Cheat Sheet
+- **Synchronized Instance Method / `synchronized(this)`** → acquires the monitor of the current instance (`this`).
+- **Synchronized Static Method / `synchronized(ClassName.class)`** → acquires the monitor of the `Class` object.
+- **Custom Lock (`private final Object lock = new Object()`)** → isolates locking to specific independent state and prevents external code from locking on `this`.
+- **Key Properties:** Monitors provide both **mutual exclusion** and **memory visibility** (happens-before on unlock → lock), are **reentrant**, and are **automatically released** when exiting the block (even on exceptions).
+
+---
+
 ## 🚀 How to Compile and Run
 
 Make sure you have **Java (JDK 8 or higher)** installed.
 
-1. Navigate to a topic directory (for example, `01-thread-creation-and-lifecycle`, `02-thread-methods`, or `03-problems-in-multithreading`):
+1. Navigate to a topic directory (for example, `01-thread-creation-and-lifecycle`, `02-thread-methods`, `03-problems-in-multithreading`, or `04-monitor-locks`):
    ```bash
-   cd 03-problems-in-multithreading
+   cd 04-monitor-locks
    ```
 
 2. Compile all `.java` files:
@@ -122,6 +149,7 @@ Make sure you have **Java (JDK 8 or higher)** installed.
    ```bash
    java Demo
    java Demo2
+   # ... up to Demo6
    ```
 
 > **Note:** Compiled `.class` files are automatically ignored by `.gitignore` to keep the repository clean.
@@ -133,6 +161,6 @@ Make sure you have **Java (JDK 8 or higher)** installed.
 - [x] **01. Thread Creation and Lifecycle** (`Thread`, `Runnable`, Lambdas, `start()` vs `run()`, `Thread.State`)
 - [x] **02. Thread Methods & Control** (`sleep`, `join`, `yield`, `interrupt`, `isAlive`, `setName`, Priority, Daemon threads)
 - [x] **03. Problems in Multithreading** (Race conditions, Critical section, Atomicity, Visibility, Ordering, `volatile`)
-- [ ] **04. Synchronization & Locks** (`synchronized`, intrinsic locks, `ReentrantLock`, `AtomicInteger`)
+- [x] **04. Synchronization & Monitor Locks** (`synchronized` methods/blocks, `this` vs `Class` monitor, custom locks, reentrancy)
 - [ ] **05. Inter-Thread Communication** (`wait`, `notify`, `notifyAll`, Producer-Consumer)
-- [ ] **06. Concurrency Utilities & Executors** (`Semaphore`, `CountDownLatch`, Thread pools, `CompletableFuture`)
+- [ ] **06. Concurrency Utilities & Executors** (`ReentrantLock`, `AtomicInteger`, `Semaphore`, `CountDownLatch`, Thread pools, `CompletableFuture`)
